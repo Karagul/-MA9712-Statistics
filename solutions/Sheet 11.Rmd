@@ -1,0 +1,64 @@
+---
+title: "H.11.2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#### Dependencies 
+```{r, message=FALSE}
+library(tidyverse)
+library(ggfortify)
+```
+
+#### Data Import
+```{r}
+bolts <- read_csv(file = "rusty_bolt.csv")
+slice(bolts)
+```
+
+
+#### a) __Answer:__
+
+It is reasonable to apply ANOVA in order to compare the means of more than 2 groups, in our case 7. However, in order to apply ANOVA, 3 conditions must match - In our case it is difficult to proof for any of the conditions due to a limit amount of information. For this reason, we will apply ANOVA but we should be very critical towards the results outputed. 
+
+1. __Independence within and between groups:__ in our case it is difficult to check this requirement because we do not know if the sample is randomized;\be
+2. __Nearly Normal:__ The samples for each category is really small (4 respectively). So we assume normaly but in theory a lot of skewness take place.\be
+3. __Variability across groups should be equal:__ Due to the small number of observations per group is difficult to say anything about the variability.
+```{r}
+bolts %>% 
+  group_by(treatment) %>%
+  summarise(n=n(), mean=mean(torque), sd =sd(torque))
+ggplot(bolts, aes(bolts$treatment, bolts$torque)) + geom_boxplot()
+
+```
+
+#### b) ANOVA
+__Null Hypothesis__ $N_{0}:$ The mean outcome is the same across all categories, or only differ by chance.  
+__Alternative Hypothesis__ $N_{A}:$ At least one mean outcome is different than other.
+
+```{r}
+mod_bolts <- aov(torque ~ treatment, data = bolts)
+summary(mod_bolts)
+```
+
+__Answer:__ We can reject the the $N_{0}$ because the p-value is very small. Based on the outputs from the ANOVA test it is reasonable to say that at least one mean of a group is different compared to the rest. However, we can't say which group is the different one, and for this reason one can conclude that there is at least one theatment which is more or less effective than the other when it comes to treating rusty bolts.
+
+#### c) Boxplot of torque 
+```{r}
+ggplot(bolts, aes(bolts$treatment, bolts$torque)) + geom_boxplot()
+```
+
+__Answer:__ Treatment Liquid Wrench and AeroKroil are probably different from the others.
+
+#### d) Tukey’s honestly significant difference test
+```{r}
+TukeyHSD(mod_bolts)
+```
+
+__Treatments__: Liquid Wrench-AeroKroil and none-Liquid Wrench are significantly different at
+the level 0.05, because:  
+__1.__ These comparisons don't cover 0  (look in lwr and upr columns);   
+__2.__ Their adjusted  p-values < 5%.  
+Implying that Liquid Wrench is different compared to the other groups.

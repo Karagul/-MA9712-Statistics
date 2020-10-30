@@ -1,0 +1,54 @@
+---
+title: "Untitled"
+author: "Lucas Vicentim Perasolo"
+date: "12/07/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+library(tidyverse)
+```
+
+```{r}
+data <- read.csv(file = "regression.csv")
+data
+```
+```{r}
+data  %>%
+ summarise(mean_sho_gi = mean(sho_gi),
+ mean_hgt = mean(hgt),
+ sd_sho_gi = sd(sho_gi),
+ sd_hgt = sd(hgt))
+slope <- cor(data$sho_gi, data$hgt)
+slope
+```
+```{r}
+model <- lm(data = data)
+model
+library(ggfortify)
+autoplot(model)
+summary(model)$r.squared
+```
+
+
+```{r}
+summary(lm(data = data))
+```
+
+
+
+```{r}
+means <- c(18.7, 19.6, 18.9, 17.5)
+sds <- c(21.7, 25.5, 22.5, 22, 22)
+n <- c(11725, 4721, 15982, 11888, 1185)
+mean_o <- (18.7 + 19.6 + 18.9 + 17.5)/4
+
+ssg <- n[0] * (means[0] - mean_o)**2 + (means[1] - mean_o)**2 + (means[2] - mean_o)**2 + (means[3] - mean_o)**2
+ssg
+
+```
+

@@ -1,0 +1,291 @@
+---
+title: "Exam"
+author: "Lucas Vicentim Perasolo"
+date: "31/07/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Dependencies
+```{r, message=FALSE}
+library(openintro)
+library(tidyverse)
+library(GGally)
+library(infer)
+library(ggplot2)
+library(ggfortify)
+
+```
+
+#### FundamentalsÇ reading data
+```{r}
+tests <- read_csv("test_data.csv")
+tests %>% 
+      group_by(group) %>%
+      summarise(mean = mean(EeDbY)) %>%
+      slice(1)
+
+```
+
+
+
+#### Sheet 2: Read Data, Mean & Median Analysis, Boxplot and Association between Variables
+```{r, message=FALSE}
+acs12 %>%
+  group_by(race) %>%
+    summarise(sample_mean = mean(time_to_work, na.rm = TRUE),
+              sample_median = median(time_to_work, na.rm = TRUE))
+```
+
+Plotting the relationship between a discrete x and continuos y
+```{r}
+ggplot(acs12, aes(x=race, y=time_to_work)) + geom_boxplot()
+```
+
+Plotting the relationship between a continuos y and continuos y
+```{r}
+ggplot(acs12, aes(x=time_to_work, y=income)) + geom_point()
+quantile(acs12$income, .95, na.rm = TRUE)
+
+```
+
+#### Sheet 3: Import data, Group, Mean/Median/SD/Max/Total number anlayzis, Contigency table, Probability
+
+Importing data and plotting
+```{r, message=FALSE}
+covid_data <- read_csv("covid.csv")
+
+date_total <- covid_data %>%
+                group_by(date) %>%
+                summarise(total_infected = sum(number_infected, na.rm=TRUE))
+ggplot(date_total, aes(x=date, y=total_infected)) + geom_line()
+
+```
+
+Grouping data by a parameter which first must be created becuase it depends on the sum of values from another parameter
+```{r,  message=FALSE}
+federal_average <- covid_data %>%
+                    group_by(federal_state) %>%
+                    summarise(average_infection = mean(number_infected))
+federal_average
+```
+
+Analyzing according to a specific filter
+```{r, message=FALSE}
+bayern <- covid_data %>%
+            filter(federal_state == "Bayern") %>%
+            group_by(date) %>%
+            summarise(total_infected_bayern_date = sum(number_infected, na.rm=TRUE)) %>%
+            summarise(mean = mean(total_infected_bayern_date),
+                             median = median(total_infected_bayern_date),
+                             std = sd(total_infected_bayern_date),
+                             max = max(total_infected_bayern_date),
+                             total = sum(total_infected_bayern_date), na.rm=TRUE)
+```
+
+Contigency table
+```{r, message=FALSE}
+c_table <- read_csv("covid_too.csv")
+
+dt <- table(c_table$sex, c_table$age_group)
+addmargins(dt)
+
+```
+
+#### Sheet 4: Randomization technique (Checking for independence)
+
+H0 : The variables group and survived are independent. They have no relationship, and the difference in survival
+rates between the control and treatment groups was due to chance. In other words, heart transplant is not effective.
+and hence evidence in favour of the alternative hypothesis
+
+HA : The variables group and survived are not independent. The difference in survival rates between the control and
+treatment groups was not due to chance and the heart transplant is effective
+
+Preparing
+```{r}
+df <- tibble(
+transplant = c(rep('treatment', 69), rep('control', 34)),
+survived = c(rep(c('yes', 'no'), c(24, 45)),
+rep(c('yes', 'no'), c(4, 30)))
+)
+
+(treatment_per <- df %>%
+filter(transplant == 'treatment', survived == 'yes') %>%
+summarise(per_surv = n() / nrow(filter(df, transplant == 'treatment'))))
+
+(control_per <- df %>%
+filter(transplant == 'control', survived == 'yes') %>%
+summarise(per_surv = n() / nrow(filter(df, transplant == 'control'))))
+
+(diff_stat <- treatment_per - control_per)
+```
+
+Idea: Randomly permute the variable transplant and leave survived as it is. If they are independent,
+the value of the statistic should be comparable. But we need to repeat those steps several times.
+
+```{r, message=FALSE}
+set.seed(12345) # running this command, makes the result reproducible
+N <- 100
+diff_stat_perm <- vector("numeric", N)
+for(i in 1:N){
+df_perm <- df %>%
+mutate(transplant = sample(transplant, nrow(df)))
+df_perm_perc <- df_perm %>%
+group_by(transplant, survived) %>%
+summarise(n = n()) %>%
+mutate(freq = n / sum(n))
+diff_stat_perm[i] <- df_perm_perc$freq[4] - df_perm_perc$freq[2]
+}
+sum(abs(diff_stat_perm) >= diff_stat) / N
+
+```
+This means, that we observed a difference (in absolute value) as least as large as 0.230179028132992 just in 0.01 of
+the N=100 simulation runs.
+The data provide convincing evidence for the alternative hypothesis of dependence between the variables transplant
+and survived. Hence there is convincing evidence to suggest that the transplant program is effective.
+
+#### Sheet 05 Distributions
+
+##### Normal Distribution functions 
+```{r}
+# NORMAL DISTRIBUTION
+
+#dnorm(x, mean = 0, sd = 1, log = FALSE)
+#pnorm(q, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE) -> Normal probabilities (!)
+#qnorm(p, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE) -> Quantiles (!)
+#rnorm(n, mean = 0, sd = 1)
+ 
+ggplot(data.frame(x = c(-5, 5)), aes(x)) + stat_function(fun = dnorm) + theme_bw() + ylab("f(x)") + ggtitle(expression(paste(mu,"= 55","and", sigma, "=6")))
+pert <- pnorm(54, mean=55, sd =6)
+pert
+
+# BINOMIAL DISTRIBUTION 
+
+#dbinom(x, size, prob, log = FALSE)
+#pbinom(q, size, prob, lower.tail = TRUE, log.p = FALSE) -> Binomial probability (!)
+#qbinom(p, size, prob, lower.tail = TRUE, log.p = FALSE) -> Quantiles (!)
+#rbinom(n, size, prob) 
+
+# NEGATIVE BINOMIAL DISTRIBUTION 
+
+#dnbinom(x, size, prob, mu, log = FALSE)
+#pnbinom(q, size, prob, mu, lower.tail = TRUE, log.p = FALSE) -> Negative Binomial probability (!)
+#qnbinom(p, size, prob, mu, lower.tail = TRUE, log.p = FALSE) -> Quantiles 
+#rnbinom(n, size, prob, mu)
+
+# GEOMETRIC DISTRIBUTIONS 
+
+#dgeom(x, prob, log = FALSE)
+#pgeom(q, prob, lower.tail = TRUE, log.p = FALSE)
+#qgeom(p, prob, lower.tail = TRUE, log.p = FALSE)
+#rgeom(n, prob)
+
+```
+
+
+#### Sheet 06 - Intro to Inference (Sampling Analysis)
+
+##### Exercise 6.3
+```{r, message=FALSE}
+# Importing, getting a summary of population parameters and making boxplots
+df <- read_csv("age_first_child.csv")
+summary(df$age)
+ggplot(df, aes(y = age)) + geom_boxplot()
+
+# Point Estimate
+pe <- mean(df$age)
+pe
+```
+
+
+```{r, message=FALSE}
+# Bootstrap (1000) resamples
+boot_dit <- df %>%
+  specify(response = age) %>% 
+  generate(reps = 1000, type = "bootstrap") %>%
+  calculate(stat = "mean")
+
+# Simple Statistics
+mean(boot_dit$stat)
+sd(boot_dit$stat)
+visualise(boot_dit)
+```
+
+```{r, message=FALSE}
+# Getting Quantiles
+q <- quantile(boot_dit$stat, probs = c(0.05, 0.95))
+q
+
+# Determining length
+diff(q)
+```
+
+##### Exercise 6.3
+```{r, message=FALSE}
+# Create a sample data
+sample_data <- data.frame(expense = c(rep("cover", 443), rep("not cover", 322)))
+sample_data
+
+# Bootstrap (1000) resamples
+boot_sample_data <- sample_data %>%
+                      specify(response = expense, success = "not cover") %>%
+                      generate(reps = 1000, type = "bootstrap") %>% 
+                      calculate(stat = "prop")
+visualize(boot_sample_data)
+
+# Standard Deviation
+sd(boot_sample_data$stat)
+
+```
+#### Sheet 07
+
+
+#### Sheet 08 - Hypothesis testing using Infer & Pvalue command for one and two proportion testing
+```{r, message=FALSE}
+# Hypothesis 
+df <- data.frame(status = c(rep("nausea", 7), rep("no nausea", 3)))
+
+null_dist <- df %>%
+  specify(response = status, success = "nausea") %>%
+  hypothesize(null = "point", p = 0.6) %>% 
+  generate(reps = 1000) %>% 
+  calculate(stat = "prop")
+```
+
+```{r, message=FALSE}
+#### pnorm() used to get the pvalue of 1 & 2 proportion tests
+
+# Pvalue One Proportion
+pnorm(-1.08995, lower.tail = FALSE)
+
+# Pvalue two Proportion (!) multiply by 2
+
+pnorm(-0.96311, lower.tail = FALSE) * 2
+```
+
+```{r, message=FALSE}
+# chi-squared test (fitness & independence) pvalue
+pchisq(21.4406, df = 4, lower.tail=FALSE)
+
+```
+
+
+#### Sheet 09
+```{r}
+# Confidence Intervals {90%=1.645} {95%=1.645} {98%=2.326} {99%=2.576}
+# t-test
+
+## Critical value 
+p <- 1-(2.326/2)
+qt(p, df=22)
+
+```
+
+#### Sheet 10
+#### Sheet 11
+#### Sheet 12
+#### Sheet 13
+#### Sheet 14

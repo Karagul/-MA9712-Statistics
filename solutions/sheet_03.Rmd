@@ -1,0 +1,127 @@
+---
+title: "Solution to H.3.2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Loading necessary packages
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+## a) Read in the data "RKI_COVID19_200504.csv"
+```{r}
+covid_data <- read_csv(file = "data_for_homework/RKI_COVID19_200504.csv")
+covid_data
+```
+
+## b) Infected per day
+
+__(Step 1)__: Creating a infected_per_day data frame
+```{r}
+infected_per_day <- (
+  covid_data %>%
+    select(number_infected, date) %>%
+    group_by(date) %>%
+    summarize(num = sum(number_infected))
+)
+infected_per_day
+```
+
+__(Step 2)__: Using the function geom_line() to create a line plot of the total number of
+infected per day against date
+
+```{r}
+ggplot(infected_per_day, aes(x=date, y=num)) +
+    geom_line() + labs(title="Number of infected people per day")
+```
+
+## c) Federal State
+
+__(Step 1)__: Grouping original data by `federal_state` and computing the average number of infected per state
+```{r}
+state_data <- (
+  covid_data %>%
+    group_by(federal_state, date) %>%
+    summarize(infected_per_day = sum(number_infected))
+)
+
+state_data %>%
+  summarize(avg_infected_per_state = mean(infected_per_day))
+```
+
+## d) Bavaria Analysis
+
+__(Step 1)__: Filtering state data according to "Bayern" and applying the following analysis:
+
+  * Mean
+  * Median
+  * Standard deviation
+  * Maximum
+  * Total Number
+  
+```{r}
+bavaria_data <- (
+  covid_data %>%
+    filter(federal_state == "Bayern") %>%
+    group_by(date) %>%
+    summarise(number_of_infected = sum(number_infected)) %>%
+    summarize(mean = mean(number_of_infected), median = median(number_of_infected), sd = sd(number_of_infected), 
+              max = max(number_of_infected), total = sum(number_of_infected))
+)
+bavaria_data
+```
+  
+
+## e) Contigency Table
+
+__(Step 1)__: Read in the new data "RKI_COVID19_200504_table.csv"
+
+```{r}
+covid_table_data <- read_csv(file = "data_for_homework/RKI_COVID19_200504_table.csv")
+covid_table_data
+```
+
+__(Step 2)__: Computing a contingency table for the variables `sex` and `age_group`
+```{r}
+contigency_table <- addmargins(table(covid_table_data$sex, covid_table_data$age_group))
+contigency_table
+```
+
+__Description__: 
+
+The dataset used is "RKI_COVID19_200504_table.csv". The table displayed above consists of observations of infected people in Germany ordered by two categorical variables: `sex` and `age_group`. 
+
+Margins are added to help in the explanation of the table. The rows are depicted by categories of sex: `M` for men, `W` for women, and `Sum` for the sum of men and women under a respective age group. The columns are depicted by categories of age (all in Year units): `A00-A04`, `A05-A14`, `A15-A34`, `A35-A59`, `A60-A79`, `A80+` and `Sum` for sum of all cases of men and women.
+
+The total of observations are 162524 cases. Out of those 77475 are male while 85049 are female. Most infected observations are within age category `A35-A59`, respectively 68258 cases. `A00-A04` group is the one with least infected cases, respectively 1420 cases.
+
+`M` and `W` infections oscillates according to age groups. On the one hand, under ages,`A00-A04`,`A05-A14`, and `A60-A79`, male infection cases are bigger than female cases. On the other hand, under ages, `A15-A34`, `A35-A59`,and `A80+`, female infection cases are bigger than male ones. In the next exercise, the same table is extended to frequency and percentage values.  
+
+## f) Probability
+
+__(Step 1)__: Using the contigency table to get the frequencies / "percentages" table
+
+```{r}
+frequency_table <- addmargins(prop.table(table(covid_table_data$sex, covid_table_data$age_group)))
+frequency_table
+```
+
+__(Step 2)__: Considering all observations are infected, as the exercise states. We can read from the table above the probability that an infected person is a male `and` between 60 and 79 years old.
+
+$$\mathrm{P}(Male \land Age_{60-79})$$
+```{r}
+probability <- frequency_table["M","A60-A79"]
+probability 
+```
+
+We can multiply `probability` by `100` to get the value in percentages
+```{r}
+answer <- probability * 100 
+cat(answer,"%")
+```
+
+__Answer__: The probability that an infected person is $\mathrm{P}(Male \land Age_{60-79})$ is equal to 10.01329 %.

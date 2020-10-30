@@ -1,0 +1,146 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+```{r setup, include=TRUE}
+#benötigte Packages:
+library(ggplot2)
+library(tidyverse)
+library (infer)
+library (ggfortify)
+```
+
+```{r}
+
+head(data)  --> returns the first objects of a vector/matrix 
+tails(data) --> returns the last objects of a vector/matrix()
+sd(data) --> standard deviation 
+mean(data) --> mean
+nrow(data) --> number of rows with "data"
+ncol(data) --> number of columns with "data"
+read_csv("data/rusty_bolt.csv") --> Daten einlesen
+
+#Visualisation
+
+ggplot(Bspdata, aes(x= var.XAchse, y= var.YAchse))+ geom_......
+-->   geom_bar()
+      geom_point()
+      geom_line()
+      geom_smooth()
+      geom_histogram()
+      geom_boxpolot()
+      geom_text()
+      geom_density()
+      geom_errorbar()
+      geom_hline()
+      geom_vline()
+
+#datatransformation
+
+slice(data, n/row 1:3, n/column 1:3)             # schneidet daten aus Matrix aus      
+      
+select(data, variable1, variable2)               #Erstellt eine Tibble mit den Variablen aus dem Datensatz       
+      
+filter(data, Bspcondition: Year (Spalte/Kategorie) == "2007"(Wert) ) #Filtern/ Suchen nach bestimmten Daten mit Operatoren, wie: ==, >, >=, &, |, !, xor(), is.na(), between(), near()
+
+group_by(data, Bspcondition: Year (Spalte/Kategorie))   #Gruppiert Einträge, die der Kategorie/Spalte angehören
+
+summarize/summarise(data, NameNeueSpalte = funktion()) # funktion() kann n()--> zählt Einträge, mean()--> rechnet den mean aus, nrow(), ncol(), sd(),....
+
+table(data$c1, data$c2)   #Erstellt eine Tabelle mit gewählten Daten
+
+addmargins(table) #Fügt Summen der Columns/ Rows und Totals hinzu
+
+prop.table(data, margin) #Rechnet dei Wahrscheinlichkeiten abhängig von der Summe innerhalb der Tabelle aus --> Wenn margin = null (Gesamtsumme), margin = 1 (Rowsumme), margin = 2 (Columnsumme) 
+data.frame(data)  # Erstellt einen Dataframe, der eine Sammlung von Variablen enthält
+
+
+
+#Simulation
+
+mutate(data, frequency = x / sum(n)) #Fügen neue Einträge im Rahmen unserer Anweisungen hinzu 
+
+variableneu = c(rep('A', 30), rep('B', 40)) #rep(erstellt Datensätze)
+
+sum(data) #Summieren der Werte
+
+abs(data) # Betrag/ absolute value
+
+#bootstrap distribution:
+data <- data %>%
+specify(variableresponse ~ NULL/variableexplanatory) %>%    # Auswählen der beobachteten Variable
+[hypothesize(null = "point", p = 1/3) %>%]
+generate(reps = 1000, type = "bootstrap") %>%               # Daten X-Mal generieren
+calculate(stat = "mean"/"prop")                             # Mean oder Probability ausrechnen
+visualize(data, obs_stat = mean(data$variable))             # visuell ausgeben
+get_confidence_interval(level = 0.95, type = "percentile")    # einfach CI von bootstrap ausgeben lassen
+get_p_value(obs_stat = 0.24, direction = less/more/two_sided) #einfach P-Value von bootstrap ausgeben lassen
+
+#chisquare distribution:
+specify(variableresponse ~ NULL/variableexplanatory) %>%    # Auswählen der beobachteten Variable
+hypothesize(null = "independence") %>%
+generate(reps = 1000, type = "permute") %>%                 # Daten X-Mal generieren
+calculate(stat = "Chisq")                                   # Mean ausrechnen
+visualize(data)                                             # visuell ausgeben 
+
+
+#Probabilities
+pnorm(value, mean, sd, lower.tail= F/T)/ pnorm(Z) # probability für normal distribution
+
+pbinom(value, size, prob = 0.25, lower.tail = F/T) # probability für binomial distribution
+
+pchisq(X^2, df, lower.tail = F/T)                  # probability für chisquare distribution
+
+pt(t-value, df, lower.tail = F/T)                  # probability für T-distribution
+
+
+#Quantile
+quantile(data, probs = 0.025, 0.975) # gibt die Quantiles für die geg Wahrscheinlichkeiten der Bootstrapdistribution 
+
+qnorm(percent, mean, sd, lower.tail = F/T)    # gibt die Quantiles für die geg Wahrscheinlichkeiten der Normaldistribution (P-Values)
+
+qbinom(percent, size, prob = 0.25, lower.tail = F/T) # gibt die Quantiles für die geg Wahrscheinlichkeiten der Binomialdistribution (P-Values)
+
+qchisq(percent, df, lower.tail = F/T) # gibt die Quantiles für die geg Wahrscheinlichkeiten der Chisquaredistribution (P-Values)
+
+qt(percent, df, lower.tail = F/T)      
+
+--> Bei two_sided tests 2* tail
+
+#direkte Tests
+chisq.test(matrix/vector, probability)           # Führt einen Chisquare test durch und gibt p-value, X^2 und df aus
+
+t.test(matrix/vektor)                            # Führt einen T-test durch und gibt p-value, T-Score und df aus
+t.test(matrix/vektor, matrix/vektor, paired = T) # Führt einen T-test mit paired-data durch und gibt p-value, T-Score und df aus
+t.test(response ~ explanatory, alternative [hypothesis] = "greater", matrix/vektor)  # Führt einen T-test mit 2 sample means durch und gibt p-value, T-Score, df, sowie das confidence Interval aus
+
+#ANOVA
+anova <- aov(response ~ explanatory, data)
+summary(anova)                              #Führt den ANOVA-test durch
+autoplot (anova, which = 2, ncol = 1)       #plottet Residuals --> Normality
+#-----------
+summary(aov(response ~ explanatory, data))    # Alternativer Weg
+coef(aov(response ~ explanatory, data))
+autoplot(aov(response ~ explanatory, data))  # Conditions checken
+
+
+TukeyHSD(anova) # Führt die Vergleiche paarweise durch
+
+#Least squares regression
+ cor(var1, var2)      #calculates the correlation between two variables
+
+#simple linear regression
+lm(response~explanatory, data)          # Erstellt ein linear regression model und gibt den Intercept, sowie die Slope an
+coef(lm(response~explanatory, data))    # Gibt neben dem Intercept auch noch weitere Werte 
+summary (lm(response~explanatory, data)) # Gibt noch weitere Werte an
+
+
+anova(linear model)                   # Führt die Analysis of Variance durch
+```
+

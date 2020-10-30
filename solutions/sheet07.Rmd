@@ -1,0 +1,66 @@
+---
+title: "Sheet07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading Necessary Packages
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(infer)
+```
+
+## a) Creating a dataframe
+```{r}
+nearsightedness <- c(rep("yes", 21), rep("no", 194-21))
+df <- data.frame(nearsightedness)
+as_tibble(df)
+```
+
+## b) Runnning the command
+```{r}
+table(df)
+```
+
+## c) Null and Alternative Hypothesis
+
+_Null Hypothesis:_ Nearsightness affect 8% of the childreen. In other words, the data provides no evidence about the inaccuracy of the 8% value.The data differ from the 8% value due to chance.  $$ H_{0}: μ_{x} = 8\%$$
+
+_Alternative Hypothesis:_ Nearsightness affect more then 8% of the childreen. In other words, the data provides evidence that the 8% is inaccurate.The data doesn’t differ from the 8% value due to chance. $$ H_{a}: μ_{x} > 8\%$$
+
+
+## d) Null Distributions based on 1000 resamples
+```{r, message=FALSE, warning=FALSE}
+set.seed(12345)
+null_distn <- df %>%
+  specify(response = nearsightedness, success = "yes") %>%
+  hypothesize(null = "point", p = 0.08) %>%
+  generate(reps = 1000) %>%
+  calculate(stat = "prop") 
+null_distn
+```
+
+## e) Testing Null Hypothesis (from exercise (c))
+```{r}
+p_value <- null_distn %>%
+  get_pvalue(obs_stat = 21/194, direction = "greater")
+p_value
+
+null_distn %>%
+  visualize() +
+  shade_p_value(obs_stat = 21/194, direction = "greater")
+
+significance_level <- 0.05
+```
+
+## f) Conclusion
+
+If the p-value is less than or equal to the significance level, the null hypothesis is rejected.
+```{r}
+p_value <= significance_level
+```
+
+Since the statement above does not hold, one must say that there is NOT sufficient evidence to reject the Null Hypothesis.Going back to the question: `Do these data provide evidence that the 8% value is inaccurate?` We can not exclude, that the data doesn’t provide any evidence about the inaccuracy of the 8% value. Our observed data might differ due to chance. This means, we have no evidence whether the statement `It is believed that near-sightedness affects about 8% of all children.` is inaccurate.

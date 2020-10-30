@@ -1,0 +1,28 @@
+---
+title: "Untitled"
+author: "Lucas Vicentim Perasolo"
+date: "07/08/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, message=FALSE}
+library(tidyverse)
+library(GGally)
+library(infer)
+library(ggplot2)
+library(ggfortify)
+library(openintro)
+```
+
+```{r}
+input <- read_csv("sample_data.csv")
+input %>% 
+      group_by(group) %>%
+      summarise(mean = mean(HzSsK)) %>%
+      slice(1)
+```

@@ -1,0 +1,108 @@
+---
+title: "Sheet 9"
+output: html_document
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Proble H.9.1
+#### Dependencies
+```{r, message=FALSE}
+library(tidyverse)
+library(openintro)
+```
+#### Data
+```{r}
+anes <- as.table(rbind(c(44, 29, 62, 36), c(77, 54, 131, 67)))
+dimnames(anes) <- list(direction = c('right_direction', 'wrong_track'), 
+                       region = c('north_central', 'northeast', 'south', 'west'))
+addmargins(anes)
+```
+
+#### a) Evalue whether the ANES sample is representative of the population distribution of US residents:  
+
+__Hypotheses:__  
+
+  $H_{0}:$ Sample is representatie of the targeted population.  
+  
+  $H_{A}:$ Sample is not representatie of the targeted population.
+
+__Conditions:__  
+
+  __1.__ Independence Condition fullfilment once it is a random sample.  
+  
+  __2.__ Sample Size Condition: $ExpectedCases \ge 5$  
+  
+```{r}
+sample <- 500
+probabilities <- c(0.22, 0.18, 0.37, 0.23)
+distribution <- sample * probabilities 
+all_expected_cases <- matrix(distribution, nrow = 1, ncol=4)
+all_expected_cases
+```
+
+Based on the tables with the expected values above, one can say that the Sample Size condition is also fullfilled!
+
+  __3.__ Degree of Freedom Condition fullfilment: $df = k - 1 = 4 - 1 = 3$  
+  
+__T-test and p-value__
+```{r}
+# Using probabilities defined aboved
+sums <- c(121, 83, 193, 103)
+chisq.test(x = sums, p = probabilities)
+
+```
+
+__Conclusion:__  
+$H_{0}$ can not be rejected, because p-value is sufficiently large $p-value = 0.3557 > 0.05$, which implies weak evidence against the null hypothesis, we fail to reject the null hypothesis and tthe sample is representative of the target population.
+
+#### b) Region and direction
+
+  __(i)__  
+  __Response__ variable: Direction  
+  
+  __Explanatory__ variable: Region  
+         
+  __(ii)__  
+  
+  $H_{0}:$ Direction and region are independent. The direction does not vary by region.  
+  
+  $H_{A}:$ Direction and region are dependent. The direction varies by region.
+
+  __(iii)__  __T-test and p-value__
+```{r}
+chisq.test(anes)
+```
+
+## Proble H.9.2
+
+#### a) __Hypotheses:__  
+
+  $H_{0}:$ The urban police officers have the same average lead exposure than the suburb individuals  
+  
+  $H_{A}:$ The urban police officers have a different average lead exposure than the suburb individuals  
+  
+#### b) __Conditions:__  
+
+__1__ Independence: There is no evidence that the sample is randomnized, and therefore this condition isn't fullfilled.  
+__2__ Normality Thumb-Rule: $n \ge 30: n = 52$ implies no information about extreme outliers, so we assume sampling distribution is nearly normal.  
+
+#### c)
+```{r}
+difference <- 124.32 - 35
+difference
+null <- 0
+null
+standard_error <- 37.74/sqrt(52)
+standard_error
+df <- 52 - 1
+df
+t <- (difference - null)/standard_error
+t
+p_value <- pt(t, df=df, lower.tail = F) * 2 # I have multiplied the p-value by 2, once it is a two-sided hypothesis
+
+p_value
+```
+
+Based on $p-value = 9.913949e-23$ one can conclude: the data shows evidence that lead exposure of the urban police officers is different than the lead of thesuburb police officers.

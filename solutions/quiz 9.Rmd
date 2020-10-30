@@ -1,0 +1,124 @@
+---
+title: "Quiz R"
+author: "Lucas Vicentim Perasolo"
+date: "28/06/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Question 1
+
+##### a) Goodness of fit using chi-square
+##### b) Counts woods
+```{r}
+count_woods <- 0.03 * 414
+count_woods
+count_gras <- 0.1 * 414
+count_gras
+count_forest <- 0.31 * 414
+count_forest
+count_other <- 0.56 * 414
+count_other
+```
+##### c) test static
+```{r}
+z_wood <- (16 - count_woods)/sqrt(count_woods)
+z_wood
+
+z_gras <- (32 - count_gras)/sqrt(count_gras)
+z_gras
+
+z_forest <- (102 - count_forest)/sqrt(count_forest)
+z_forest
+
+z_other <- (264 - count_other)/sqrt(count_other)
+z_other
+
+vector_squared <- c(z_wood, z_gras, z_forest, z_other)**2
+vector_squared
+
+test_statistic <- sum(vector_squared)
+test_statistic
+```
+##### d) DoFs
+```{r}
+dofs <- 4 - 1
+dofs
+```
+##### e) p-value -> Review, because I believe it should be upper tail
+```{r}
+pchisq(test_statistic, df = dofs, lower.tail = FALSE)
+```
+
+
+#### Question 3
+##### a) Chi-square test for two way
+##### b) Do
+```{r}
+do_prop <- 2561 / 50572
+do_prop
+```
+##### c) Don't 
+```{r}
+dont_prop <- 48011 / 50572
+dont_prop
+```
+##### d and e) Count and df
+```{r}
+df <- 5 - 1
+df
+
+cell_total <- 12238 
+count <- cell_total * do_prop
+count
+cell <- 652
+answer <- (cell - count)**2 / count
+answer
+```
+##### f) pvalue
+```{r}
+pchisq(19.0504, df = df, lower.tail = FALSE)
+```
+##### g) pvalue is less than significance level so null hypothesis is rejcted and there is no association. 
+
+
+#### Question 4
+```{r}
+n <- 24
+x1 <- 61
+x2 <- 77
+
+SMean <- (x2 + x1) / 2
+SMean
+```
+```{r}
+ME <- (x2 - x1) / 2
+ME
+```
+```{r}
+df <- 24 - 1
+p <- 0.97
+p_2tails <- p + (1 - p)/2
+p_2tails
+
+t_val <- qt(p_2tails, df)
+t_val
+
+# Since ME = t * SE
+SE <- ME / t_val
+SE
+
+# Since SE = sd/sqrt(n)
+sd <- SE * sqrt(n)
+sd
+```
+
+#### Question 6
+```{r}
+library('readr')
+cake <- read_csv('milk.csv')
+cake
+```
